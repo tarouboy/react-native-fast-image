@@ -22,18 +22,6 @@
     self = [super init];
     self.resizeMode = RCTResizeModeCover;
     self.clipsToBounds = YES;
-
-    SDImageCache.sharedImageCache.config.maxCacheAge = 3600 * 24 * 7; // 1 Week
-    SDImageCache.sharedImageCache.maxMemoryCost = 1024 * 1024 * 4 * 20; // 20 images (1024 * 1024 pixels)
-    SDImageCache.sharedImageCache.config.shouldCacheImagesInMemory = NO; // Disable memory cache, may cause cell-reusing flash because disk query is async
-    SDImageCache.shared.config.shouldUseWeakMemoryCache = NO; // Disable weak cache, may see blank when return from background because memory cache is purged under pressure
-    SDImageCache.sharedImageCache.config.diskCacheReadingOptions = NSDataReadingMappedIfSafe; // Use mmap for disk cache query
-    SDWebImageManager.sharedManager.optionsProcessor = [SDWebImageOptionsProcessor optionsProcessorWithBlock:^SDWebImageOptionsResult * _Nullable(NSURL * _Nullable url, SDWebImageOptions options, SDWebImageContext * _Nullable context) {
-         // Disable Force Decoding in global, may reduce the frame rate
-         options |= SDWebImageAvoidDecodeImage;
-         return [[SDWebImageOptionsResult alloc] initWithOptions:options context:context];
-    }];
-
     return self;
 }
 
@@ -133,6 +121,17 @@
 
         // Load base64 images.
         NSString* url = [_source.url absoluteString];
+        SDImageCache.sharedImageCache.config.maxCacheAge = 3600 * 24 * 7; // 1 Week
+        SDImageCache.sharedImageCache.maxMemoryCost = 1024 * 1024 * 4 * 20; // 20 images (1024 * 1024 pixels)
+        SDImageCache.sharedImageCache.config.shouldCacheImagesInMemory = NO; // Disable memory cache, may cause cell-reusing flash because disk query is async
+        SDImageCache.shared.config.shouldUseWeakMemoryCache = NO; // Disable weak cache, may see blank when return from background because memory cache is purged under pressure
+        SDImageCache.sharedImageCache.config.diskCacheReadingOptions = NSDataReadingMappedIfSafe; // Use mmap for disk cache query
+        SDWebImageManager.sharedManager.optionsProcessor = [SDWebImageOptionsProcessor optionsProcessorWithBlock:^SDWebImageOptionsResult * _Nullable(NSURL * _Nullable url, SDWebImageOptions options, SDWebImageContext * _Nullable context) {
+             // Disable Force Decoding in global, may reduce the frame rate
+             options |= SDWebImageAvoidDecodeImage;
+             return [[SDWebImageOptionsResult alloc] initWithOptions:options context:context];
+        }];
+        
         if (url && [url hasPrefix:@"data:image"]) {
             if (self.onFastImageLoadStart) {
                 self.onFastImageLoadStart(@{});
