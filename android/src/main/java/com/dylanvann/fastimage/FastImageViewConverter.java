@@ -41,6 +41,7 @@ class FastImageViewConverter {
                 put("immutable", FastImageCacheControl.IMMUTABLE);
                 put("web", FastImageCacheControl.WEB);
                 put("cacheOnly", FastImageCacheControl.CACHE_ONLY);
+                put("diskOnly", FastImageCacheControl.DISK_ONLY);
             }};
 
     private static final Map<String, Priority> FAST_IMAGE_PRIORITY_MAP =
@@ -57,7 +58,7 @@ class FastImageViewConverter {
                 put("stretch", ScaleType.FIT_XY);
                 put("center", ScaleType.CENTER_INSIDE);
             }};
-    
+
     // Resolve the source uri to a file path that android understands.
     static FastImageSource getImageSource(Context context, ReadableMap source) {
         return new FastImageSource(context, source.getString("uri"), getHeaders(source));
@@ -91,7 +92,7 @@ class FastImageViewConverter {
         final FastImageCacheControl cacheControl = FastImageViewConverter.getCacheControl(source);
         DiskCacheStrategy diskCacheStrategy = DiskCacheStrategy.AUTOMATIC;
         Boolean onlyFromCache = false;
-        Boolean skipMemoryCache = false;
+        Boolean skipMemoryCache = true; //default was false, use it for testing
         switch (cacheControl) {
             case WEB:
                 // If using none then OkHttp integration should be used for caching.
@@ -100,6 +101,10 @@ class FastImageViewConverter {
                 break;
             case CACHE_ONLY:
                 onlyFromCache = true;
+                break;
+            case DISK_ONLY:
+                diskCacheStrategy = DiskCacheStrategy.AUTOMATIC;
+                skipMemoryCache = true;
                 break;
             case IMMUTABLE:
                 // Use defaults.
@@ -112,7 +117,7 @@ class FastImageViewConverter {
             .skipMemoryCache(skipMemoryCache)
             .priority(priority)
             .placeholder(TRANSPARENT_DRAWABLE);
-        
+
         if (imageSource.isResource()) {
             // Every local resource (drawable) in Android has its own unique numeric id, which are
             // generated at build time. Although these ids are unique, they are not guaranteed unique
@@ -123,7 +128,7 @@ class FastImageViewConverter {
             options = options.apply(signatureOf(ApplicationVersionSignature.obtain(context)));
         }
 
-        return options;                
+        return options;
     }
 
     private static FastImageCacheControl getCacheControl(ReadableMap source) {

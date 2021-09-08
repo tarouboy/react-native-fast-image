@@ -32,7 +32,7 @@ const priority = {
     high: 'high',
 } as const
 
-type Cache = 'immutable' | 'web' | 'cacheOnly'
+type Cache = 'immutable' | 'web' | 'cacheOnly' | 'diskOnly'
 
 const cacheControl = {
     // Ignore headers, use uri as cache key, fetch only if not in cache.
@@ -41,6 +41,8 @@ const cacheControl = {
     web: 'web',
     // Only load from cache.
     cacheOnly: 'cacheOnly',
+    // Only load from disk.
+    diskOnly: 'diskOnly',
 } as const
 
 export type Source = {
