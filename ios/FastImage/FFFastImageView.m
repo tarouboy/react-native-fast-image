@@ -22,19 +22,16 @@
     self = [super init];
     self.resizeMode = RCTResizeModeCover;
     self.clipsToBounds = YES;
-    NSUInteger m1 = [NSProcessInfo processInfo].physicalMemory;
 
-    SDImageCache *cache = [SDImageCache sharedImageCache];
-    SDWebImageManager *manager = [SDWebImageManager sharedManager];
-
-    cache.config.maxMemoryCost = m1 / 4;
-    cache.config.maxDiskAge = 3600 * 24 * 7;
-    cache.config.shouldCacheImagesInMemory = NO;
-    cache.config.shouldUseWeakMemoryCache = NO;
-    cache.config.diskCacheReadingOptions = NSDataReadingMappedIfSafe;
-    manager.optionsProcessor = [SDWebImageOptionsProcessor optionsProcessorWithBlock:^SDWebImageOptionsResult * _Nullable(NSURL * _Nullable url, SDWebImageOptions options, SDWebImageContext * _Nullable context) {
-        options |= SDWebImageAvoidDecodeImage;
-        return [[SDWebImageOptionsResult alloc] initWithOptions:options context:context];
+    SDImageCache.sharedImageCache.config.maxCacheAge = 3600 * 24 * 7; // 1 Week
+    SDImageCache.sharedImageCache.maxMemoryCost = 1024 * 1024 * 4 * 20; // 20 images (1024 * 1024 pixels)
+    SDImageCache.sharedImageCache.config.shouldCacheImagesInMemory = NO; // Disable memory cache, may cause cell-reusing flash because disk query is async
+    SDImageCache.shared.config.shouldUseWeakMemoryCache = NO; // Disable weak cache, may see blank when return from background because memory cache is purged under pressure
+    SDImageCache.sharedImageCache.config.diskCacheReadingOptions = NSDataReadingMappedIfSafe; // Use mmap for disk cache query
+    SDWebImageManager.sharedManager.optionsProcessor = [SDWebImageOptionsProcessor optionsProcessorWithBlock:^SDWebImageOptionsResult * _Nullable(NSURL * _Nullable url, SDWebImageOptions options, SDWebImageContext * _Nullable context) {
+         // Disable Force Decoding in global, may reduce the frame rate
+         options |= SDWebImageAvoidDecodeImage;
+         return [[SDWebImageOptionsResult alloc] initWithOptions:options context:context];
     }];
 
     return self;
